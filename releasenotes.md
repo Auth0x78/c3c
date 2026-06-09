@@ -11,6 +11,7 @@
 - `$vaarg[^1]` is supported. #3276
 - Improve error message when a keyword is used a block parameter. #3275
 - Correct tag method error messages from `tagof`/`has_tagof` to `get_tag` and `has_tag` 
+- Don't resume parsing when implicit module names yield invalid names.
 
 ### Stdlib changes
 - Add math::TAU / math::TWO_PI
@@ -24,7 +25,14 @@
 - JSON marshaling will return INVALID_NUMBER when encountering a inf or NaN for a float.
 - JSON decoding will reject `1.` literals.
 - `spawn` now allows binding I/O and using different settings per pipe.
- 
+- `@loop_over_ai` would leak fds, deprecated and replaced by `@loop_over_addresses`.
+- Correctly return error on native_fwrite and native_fread. 
+- Prevent infinite spin on `io::read_fully`, `File.load_buffer`, `File.load` and `File.save`.
+- `io::write_all` now retries on incomplete writes.
+- `GrowableBitSet.max_bit_set` added.
+- Added `UnboundedChannel`.
+- `BufferedChannel` and `UnbufferedChannel` gets non-blocking push/pop.
+
 ### Fixes
 - `@volatile_store` on arrays were sometimes incorrectly lowered.
 - NPOT vectors as associated variables were incorrectly lowered on load. #3228
@@ -102,8 +110,42 @@
 - NormalDist.random could occasionally return inf.
 - Url parser would fail on `foo@bar.com`.
 - Url parser would drop the port on `http://[::1]:8080`.
-- Ipv6 classification - is_link_local etc, was incorrect.
- 
+- Ipv6 classification - is_link_local etc, was incorrect
+- env::get/set_var for Win32 would appear to fail when succeeding.
+- env::get_var had a race condition on Win32.
+- process::run_capture_stdout would remove the last character, even when it wasn't `\n`.
+- Add missing `__powisf2` to compiler_rt.
+- `//` would count newlines twice when parsing JSONC.
+- `Path::for_posix(".a/..")` was not parsed correctly.
+- `SortedMap.clear` and `SortedMap.free` would work incorrectly on map initialized with ONHEAP.
+- `GrowableBitSet` would yield the wrong length.
+- `GrowableBitSet` would not work correctly on backing types bigger than uint.
+- `DString.replace` would not work correctly in some cases.
+- `ByteWriter.ensure_capacity` did realloc unnecessarily when the data exactly matched capacity.
+- `DString.equals` used `int` rather than `sz` for len comparison.
+- `DString.replace_char` would crash on empty DString.
+- `io::read_varint` and `io::write_varint`: handling for signed integers were broken.
+- `io::write_tiny_bytearray` and `io::write_short_bytearray` could have incomplete writes.
+- Splatting a partially raw array into a macro would miscompile. #3302
+- Getting the tag for an enum parameter caused a crash. #3307
+- Json marshalling of floats would lose precision.
+- Crash when initializing a bitstruct from an untyped list.
+- Shifting a vector by a non-numeric type would cause a crash rather than a compiler error.
+- Recursive macros were not detected when going by way of a lambda.
+- Compile time concatenation with an empty slice was lacking checks, causing a compiler crash.
+- Fix zip slip vulnerability.
+- Fixed issues with `Object.to_value`.
+- `DString.len` was incorrectly marked `@dynamic`.
+- Qoi decoder wasn't correctly signaling all invalid data.
+- Casting a constant string to a float vector was buggy, causing a compiler crash.
+- Codepage detection could fail values after the last element.
+- Xml parsing could leak memory if root was preceeded by Pi nodes.
+- `DateTime.diff_years` would not handle leap years properly.
+- `Deque.free` would not reset the capacity, making it break if later reused.
+- `Formatter` would overflow in cases like `%2147483648d`.
+- Distributions would drop convergence control setting on recursion.
+- In some rare cases `available()` could leave the stream in an unexpected state.
+
 ## 0.8.0 Change list
 
 ### Changes / improvements
